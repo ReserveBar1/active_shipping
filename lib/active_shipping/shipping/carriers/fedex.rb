@@ -116,6 +116,8 @@ module ActiveMerchant
       end
       
       # send ship request (can only send for a single package)
+      # shipper and recipient are contacts
+      # returns the parsed respone with tracking number, label, etc.
       def ship(shipper, recipient, package, options = {})
         options = @options.update(options)
         package = package
@@ -214,14 +216,18 @@ module ActiveMerchant
       # TODO : location = > person: contact & address
       # shipper | recipient: Location
       # options 
-      #     payor_account_number
-      #     dropoff_type
-      #     service_type
-      #     packaging_type
-      #     shipper_email
-      #     recipient_email
-      #     image_type: PDF
-      #     label_stock_type: PAPER_8.5X11_TOP_HALF_LABEL | 
+      #     payor_account_number :required
+      #     dropoff_type : default = REGULAR_PICKUP
+      #     service_type: default = GROUND_HOME_DELIVERY
+      #     packaging_type : default =" YOUR_PACKAGING"
+      #     shipper_email : required
+      #     recipient_email : required
+      #     image_type: PDF (default) | PNG | ZPLII (thermal printer language)
+      #     label_stock_type: PAPER_8.5X11_TOP_HALF_LABEL | STOCK_4X6.75_LEADING_DOC_TAB
+      #     label_printing_orientation: TOP_EDGE_OF_TEXT_FIRST
+      #     alcohol : default => false, set to true if the shipment contains alcohol.
+      #     invoice_number : optional, prints in the shipping label
+      #     po_number : optional, prints on the shipping label
       ##################################################################################################################
       def build_ship_request(shipper, recipient, package, options={})
         imperial = ['US','LR','MM'].include?(shipper.country_code(:alpha2))
@@ -274,6 +280,9 @@ module ActiveMerchant
               label_node << XmlNode.new('LabelFormatType', 'COMMON2D')
               label_node << XmlNode.new('ImageType', options[:image_type] || 'PDF')
               label_node << XmlNode.new('LabelStockType', options[:label_stock_type] || 'PAPER_8.5X11_TOP_HALF_LABEL')
+              if options[:label_stock_type] == 'STOCK_4X6.75_LEADING_DOC_TAB'
+                label_node << XmlNode.new('LabelPrintingOrientation', 'TOP_EDGE_OF_TEXT_FIRST')
+              end
             end
             
             rs << XmlNode.new('RateRequestTypes', 'ACCOUNT')
@@ -285,9 +294,33 @@ module ActiveMerchant
                 tw << XmlNode.new('Units', imperial ? 'LB' : 'KG')
                 tw << XmlNode.new('Value', [((imperial ? package.lbs : package.kgs).to_f*1000).round/1000.0, 0.1].max)
               end
-              rps << XmlNode.new('SpecialServicesRequested') do |special_services_node|
-                 special_services_node << XmlNode.new('SpecialServiceTypes', 'ALCOHOL')
+              rps << XmlNode.new('Dimensions') do |dimensions|
+                [:length,:width,:height].each do |axis|
+                  value = ((imperial ? package.inches(axis) : package.cm(axis)).to_f*1000).round/1000.0 # 3 decimals
+                  dimensions << XmlNode.new(axis.to_s.capitalize, value.ceil)
+                end
+                dimensions << XmlNode.new('Units', imperial ? 'IN' : 'CM')
               end
+              
+              # add customer references in here
+              if options[:po_number]
+                rps << XmlNode.new('CustomerReferences') do |reference_node|
+                  reference_node << XmlNode.new('CustomerReferenceType', 'P_O_NUMBER')
+                  reference_node << XmlNode.new('Value', options[:po_number])
+                end
+              end
+              if options[:invoice_number]
+                rps << XmlNode.new('CustomerReferences') do |reference_node|
+                  reference_node << XmlNode.new('CustomerReferenceType', 'INVOICE_NUMBER')
+                  reference_node << XmlNode.new('Value', options[:invoice_number])
+                end
+              end
+              if options[:alcohol] && options[:alcohol] == true
+                rps << XmlNode.new('SpecialServicesRequested') do |special_services_node|
+                  special_services_node << XmlNode.new('SpecialServiceTypes', 'ALCOHOL')
+                end
+              end
+              
             end
 
             
@@ -343,6 +376,9 @@ module ActiveMerchant
           end
           xml_node << XmlNode.new('Address') do |address_node|
             address_node << XmlNode.new('StreetLines', location.address1)
+            if location.address2
+              address_node << XmlNode.new('StreetLines', location.address2)
+            end
             address_node << XmlNode.new('City', location.city)
             address_node << XmlNode.new('StateOrProvinceCode', location.state)
             address_node << XmlNode.new('PostalCode', location.postal_code)
