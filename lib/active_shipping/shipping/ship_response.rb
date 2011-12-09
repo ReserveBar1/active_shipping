@@ -8,6 +8,7 @@ module ActiveMerchant #:nodoc:
       attr_reader :label
       attr_reader :carrier_code, :currency, :total_price
       attr_reader :binary_barcode, :string_barcode
+      attr_reader :hash_without_image
       
       def initialize(success, message, params = {}, options = {})
         @tracking_number = options[:tracking_number]
@@ -18,6 +19,9 @@ module ActiveMerchant #:nodoc:
         @shipper, @recipient = options[:shipper], options[:recipient]
         @binary_barcode = options[:binary_barcode]
         @string_barcode = options[:string_barcode]
+        # assign the entire hash and then set the image part to nil, sice we store that in a file already, do not want to store it in the database too.
+        @hash_without_image = params
+        @hash_without_image["ProcessShipmentReply"]["CompletedShipmentDetail"]["CompletedPackageDetails"]["Label"]["Parts"]["Image"]=nil
         super
       end
           
