@@ -117,7 +117,7 @@ module ActiveMerchant
       
       # send ship request (can only send for a single package)
       # shipper and recipient are contacts
-      # returns the parsed respone with tracking number, label, etc.
+      # returns the parsed response with tracking number, label, etc.
       def ship(shipper, recipient, package, options = {})
         options = @options.update(options)
         package = package
