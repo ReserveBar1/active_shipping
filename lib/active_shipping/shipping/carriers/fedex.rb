@@ -217,6 +217,7 @@ module ActiveMerchant
       # shipper | recipient: Location
       # options 
       #     payor_account_number :required
+      #     payment_type: default = SENDER (THIRD_PARTY|RECIPIENT)
       #     dropoff_type : default = REGULAR_PICKUP
       #     service_type: default = GROUND_HOME_DELIVERY
       #     packaging_type : default =" YOUR_PACKAGING"
@@ -254,7 +255,7 @@ module ActiveMerchant
             rs << build_shipper_or_recipient_node('Recipient', recipient)
             
             rs << XmlNode.new('ShippingChargesPayment') do |scp_node|
-              scp_node << XmlNode.new('PaymentType', 'SENDER')
+              scp_node << XmlNode.new('PaymentType', options[:payment_type] || 'SENDER')
               scp_node << XmlNode.new('Payor') do |payor_node|
                 payor_node << XmlNode.new('AccountNumber', options[:payor_account_number])
                 payor_node << XmlNode.new('CountryCode', shipper.country_code)
