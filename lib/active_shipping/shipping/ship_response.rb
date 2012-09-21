@@ -21,7 +21,12 @@ module ActiveMerchant #:nodoc:
         @string_barcode = options[:string_barcode]
         # assign the entire hash and then set the image part to nil, sice we store that in a file already, do not want to store it in the database too.
         @hash_without_image = params
-        @hash_without_image["ProcessShipmentReply"]["CompletedShipmentDetail"]["CompletedPackageDetails"]["Label"]["Parts"]["Image"]=nil
+        begin
+          @hash_without_image["ProcessShipmentReply"]["CompletedShipmentDetail"]["CompletedPackageDetails"]["Label"]["Parts"]["Image"]=nil
+        rescue
+          # TODO: propoer error handling
+          raise @hash_without_image.inspect
+        end
         super
       end
           
