@@ -69,7 +69,7 @@ module ActiveMerchant
       PaymentTypes = {
         'sender' => 'SENDER',
         'recipient' => 'RECIPIENT',
-        'third_party' => 'THIRDPARTY',
+        'third_party' => 'THIRD_PARTY',
         'collect' => 'COLLECT'
       }
       
@@ -125,8 +125,11 @@ module ActiveMerchant
         ship_request = build_ship_request(shipper, recipient, package, options)
         
         response = commit(save_request(ship_request), (options[:test] || false)).gsub(/<(\/)?.*?\:(.*?)>/, '<\1\2>')
-        
-        parse_ship_response(shipper, recipient, package, response, options)
+        begin
+          parse_ship_response(shipper, recipient, package, response, options)
+        rescue
+          raise response.inspect
+        end
       end
       
       
