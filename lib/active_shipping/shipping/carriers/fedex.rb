@@ -126,7 +126,7 @@ module ActiveMerchant
         
         response = commit(save_request(ship_request), (options[:test] || false)).gsub(/<(\/)?.*?\:(.*?)>/, '<\1\2>')
         begin
-          parse_ship_response(shipper, recipient, package, response, options)
+          parse_ship_response(shipper, recipient, package, response, options), ship_request
         rescue
           raise response.inspect
         end
@@ -353,7 +353,7 @@ module ActiveMerchant
         end
         
         trasaction_detail = XmlNode.new('TransactionDetail') do |td|
-          td << XmlNode.new('CustomerTransactionId', 'ActiveShipping') # TODO: Need to do something better with this..
+          td << XmlNode.new('CustomerTransactionId', @options[:po_number]) 
         end
         
         [web_authentication_detail, client_detail, trasaction_detail]
