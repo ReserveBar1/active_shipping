@@ -126,7 +126,7 @@ module ActiveMerchant
         
         response = commit(save_request(ship_request), (options[:test] || false)).gsub(/<(\/)?.*?\:(.*?)>/, '<\1\2>')
         begin
-          parse_ship_response(shipper, recipient, package, response, options), ship_request
+          return parse_ship_response(shipper, recipient, package, response, options), ship_request
         rescue
           raise response.inspect
         end
