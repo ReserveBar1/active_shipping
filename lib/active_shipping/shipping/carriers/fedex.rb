@@ -180,6 +180,14 @@ module ActiveMerchant
                   end
                   dimensions << XmlNode.new('Units', imperial ? 'IN' : 'CM')
                 end
+                if options[:adult_signature] && options[:adult_signature] == true
+                  rps << XmlNode.new('SpecialServicesRequested') do |sps|
+                    sps << XmlNode.new('SpecialServiceTypes', 'SIGNATURE_OPTION')
+                    sps << XmlNode.new('SignatureOptionDetail') do |signature_option_detail|
+                      signature_option_detail << XmlNode.new('OptionType', 'ADULT')
+                    end
+                  end
+                end
               end
             end
             
