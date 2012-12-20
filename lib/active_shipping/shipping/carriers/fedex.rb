@@ -125,10 +125,13 @@ module ActiveMerchant
         ship_request = build_ship_request(shipper, recipient, package, options)
         
         response = commit(save_request(ship_request), (options[:test] || false)).gsub(/<(\/)?.*?\:(.*?)>/, '<\1\2>')
+
         begin
           return parse_ship_response(shipper, recipient, package, response, options), ship_request
         rescue
-          raise response.inspect
+          xml = REXML::Document.new(response)
+          message = response_message(xml)
+          raise message
         end
       end
       
@@ -506,9 +509,10 @@ module ActiveMerchant
           binary_barcode = Base64.decode64(root_node.get_text('CompletedShipmentDetail/CompletedPackageDetails/OperationalDetail/Barcodes/BinaryBarcodes/Value').to_s)
           string_barcode = root_node.get_text('CompletedShipmentDetail/CompletedPackageDetails/OperationalDetail/Barcodes/StringBarcodes/Value').to_s
           label = Base64.decode64(root_node.get_text('CompletedShipmentDetail/CompletedPackageDetails/Label/Parts/Image').to_s)
+          ShipResponse.new(success, message, Hash.from_xml(response), :xml => response, :request => last_request, :params => {}, :binary_barcode => binary_barcode, :string_barcode => string_barcode, :total_price => total_price, :currency => currency, :carrier_code => carrier_code, :tracking_number => tracking_number, :label => label)
+        else
+          ShipResponse.new(success, message, Hash.from_xml(response), :xml => response, :request => last_request, :params => {})
         end
-
-        ShipResponse.new(success, message, Hash.from_xml(response), :xml => response, :request => last_request, :params => {}, :binary_barcode => binary_barcode, :string_barcode => string_barcode, :total_price => total_price, :currency => currency, :carrier_code => carrier_code, :tracking_number => tracking_number, :label => label)
       end
             
       def response_status_node(document)
