@@ -243,6 +243,8 @@ module ActiveMerchant
       #     alcohol : default => false, set to true if the shipment contains alcohol.
       #     invoice_number : optional, prints in the shipping label
       #     po_number : optional, prints on the shipping label
+      #     saturday_delivery: default => false, set to true required for all saturday delivery requests, as this is not on the service type.
+      #     ship_timestamp: needs to be forced to Thursday for 2day saturday delivery test labels, etc.
       ##################################################################################################################
       def build_ship_request(shipper, recipient, package, options={})
         imperial = ['US','LR','MM'].include?(shipper.country_code(:alpha2))
@@ -260,7 +262,11 @@ module ActiveMerchant
           
         
           root_node << XmlNode.new('RequestedShipment') do |rs|
-            rs << XmlNode.new('ShipTimestamp', Time.now)
+            if options[:ship_timestamp]
+              rs << XmlNode.new('ShipTimestamp', options[:ship_timestamp])
+            else
+              rs << XmlNode.new('ShipTimestamp', Time.now)
+            end
             rs << XmlNode.new('DropoffType', options[:dropoff_type] || 'REGULAR_PICKUP')
             rs << XmlNode.new('ServiceType', options[:service_type] || 'GROUND_HOME_DELIVERY')
             rs << XmlNode.new('PackagingType', options[:packaging_type] || 'YOUR_PACKAGING')
@@ -276,6 +282,7 @@ module ActiveMerchant
               end
             end
             rs << XmlNode.new('SpecialServicesRequested') do |special_services_node|
+              special_services_node << XmlNode.new('SpecialServiceTypes', 'SATURDAY_DELIVERY') if options[:saturday_delivery]
               special_services_node << XmlNode.new('SpecialServiceTypes', 'EMAIL_NOTIFICATION')
               special_services_node << XmlNode.new('EMailNotificationDetail') do |email_node|
                 email_node << XmlNode.new('Recipients') do |recipients_node|
