@@ -395,7 +395,7 @@ module ActiveMerchant
           xml_node << XmlNode.new('Contact') do |contact_node|
             contact_node << XmlNode.new('PersonName', location.name)
             contact_node << XmlNode.new('PhoneNumber', location.phone)
-            contact_node << XmlNode.new('CompanyName', location.company_name) if location.company_name.present?
+            ##contact_node << XmlNode.new('CompanyName', location.company_name) if location.company_name.present?
           end
           xml_node << XmlNode.new('Address') do |address_node|
             address_node << XmlNode.new('StreetLines', location.address1)
