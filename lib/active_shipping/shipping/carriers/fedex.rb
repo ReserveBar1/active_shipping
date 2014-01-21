@@ -102,7 +102,8 @@ module ActiveMerchant
         
         rate_request = build_rate_request(origin, destination, packages, options)
         
-        response = commit(save_request(rate_request), (options[:test] || false)).gsub(/<(\/)?.*?\:(.*?)>/, '<\1\2>')
+        xml = commit(save_request(rate_request), (options[:test] || false))
+        response = remove_version_prefix(xml)
         
         parse_rate_response(origin, destination, packages, response, options)
       end
@@ -394,8 +395,8 @@ module ActiveMerchant
         node = XmlNode.new(name) do |xml_node|
           xml_node << XmlNode.new('Contact') do |contact_node|
             contact_node << XmlNode.new('PersonName', location.name)
+            contact_node << XmlNode.new('CompanyName', location.company_name) if location.company_name.present?
             contact_node << XmlNode.new('PhoneNumber', location.phone)
-            ##contact_node << XmlNode.new('CompanyName', location.company_name) if location.company_name.present?
           end
           xml_node << XmlNode.new('Address') do |address_node|
             address_node << XmlNode.new('StreetLines', location.address1)
@@ -542,6 +543,14 @@ module ActiveMerchant
       
       def handle_uk_currency(currency)
         currency =~ /UKL/i ? 'GBP' : currency
+      end
+      
+      def remove_version_prefix(xml)
+        if xml =~ /xmlns:v[0-9]/
+          xml.gsub(/<(\/)?.*?\:(.*?)>/, '<\1\2>')
+        else
+          xml
+        end
       end
     end
   end
