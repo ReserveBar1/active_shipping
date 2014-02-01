@@ -112,7 +112,8 @@ module ActiveMerchant
         options = @options.update(options)
         
         tracking_request = build_tracking_request(tracking_number, options)
-        response = commit(save_request(tracking_request), (options[:test] || false)).gsub(/<(\/)?.*?\:(.*?)>/, '<\1\2>')
+        xml = commit(save_request(tracking_request), (options[:test] || false))
+        response = remove_version_prefix(xml)
         parse_tracking_response(response, options)
       end
       
@@ -125,8 +126,9 @@ module ActiveMerchant
         
         ship_request = build_ship_request(shipper, recipient, package, options)
         
-        response = commit(save_request(ship_request), (options[:test] || false)).gsub(/<(\/)?.*?\:(.*?)>/, '<\1\2>')
-
+        xml = commit(save_request(ship_request), (options[:test] || false))
+        response = remove_version_prefix(xml)
+        
         begin
           return parse_ship_response(shipper, recipient, package, response, options), ship_request
         rescue
