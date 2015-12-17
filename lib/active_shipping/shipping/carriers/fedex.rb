@@ -179,13 +179,6 @@ module ActiveMerchant
                   tw << XmlNode.new('Units', imperial ? 'LB' : 'KG')
                   tw << XmlNode.new('Value', [((imperial ? pkg.lbs : pkg.kgs).to_f*1000).round/1000.0, 0.1].max)
                 end
-                rps << XmlNode.new('Dimensions') do |dimensions|
-                  [:length,:width,:height].each do |axis|
-                    value = ((imperial ? pkg.inches(axis) : pkg.cm(axis)).to_f*1000).round/1000.0 # 3 decimals
-                    dimensions << XmlNode.new(axis.to_s.capitalize, value.ceil)
-                  end
-                  dimensions << XmlNode.new('Units', imperial ? 'IN' : 'CM')
-                end
                 if options[:adult_signature] && options[:adult_signature] == true
                   rps << XmlNode.new('SpecialServicesRequested') do |sps|
                     sps << XmlNode.new('SpecialServiceTypes', 'SIGNATURE_OPTION')
@@ -318,13 +311,6 @@ module ActiveMerchant
               rps << XmlNode.new('Weight') do |tw|
                 tw << XmlNode.new('Units', imperial ? 'LB' : 'KG')
                 tw << XmlNode.new('Value', [((imperial ? package.lbs : package.kgs).to_f*1000).round/1000.0, 0.1].max)
-              end
-              rps << XmlNode.new('Dimensions') do |dimensions|
-                [:length,:width,:height].each do |axis|
-                  value = ((imperial ? package.inches(axis) : package.cm(axis)).to_f*1000).round/1000.0 # 3 decimals
-                  dimensions << XmlNode.new(axis.to_s.capitalize, value.ceil)
-                end
-                dimensions << XmlNode.new('Units', imperial ? 'IN' : 'CM')
               end
               
               # add customer references in here
