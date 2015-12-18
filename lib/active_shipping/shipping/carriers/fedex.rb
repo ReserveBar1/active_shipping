@@ -327,14 +327,19 @@ module ActiveMerchant
                 end
               end
               if options[:alcohol] && options[:alcohol] == true
-                rps << XmlNode.new('SpecialServicesRequested') do |special_services_node|
-                  special_services_node << XmlNode.new('SpecialServiceTypes', 'ALCOHOL')
+                service_type = 'ALCOHOL'
+                option_type = 'ADULT'
+              else
+                service_type = 'SIGNATURE_OPTION'
+                option_type = 'DIRECT'
+              end
+              rps << XmlNode.new('SpecialServicesRequested') do |special_services_node|
+                special_services_node << XmlNode.new('SpecialServiceTypes', service_type)
+                special_services_node << XmlNode.new('SignatureOptionDetail') do |ot|
+                  ot << XmlNode.new('OptionType', option_type)
                 end
               end
-              
             end
-
-            
           end
         end
         xml_request.to_s
